@@ -1,6 +1,7 @@
 const Ethers = require("ethers");
 require('dotenv').config()
-const { INFURA_PROJECT_ID, INFURA_SECRET } = process.env
+const { INFURA_PROJECT_ID, INFURA_SECRET, MINIMUM_ETH_AMOUNT } = process.env
+const { formatValue } = require('./format')
 
 // set up provider
 const provider = new Ethers.providers.InfuraProvider("homestead", {
@@ -8,19 +9,24 @@ const provider = new Ethers.providers.InfuraProvider("homestead", {
 	projectSecret: INFURA_SECRET
 });
 
+const AB_V0_CONTRACT = "0x059edd72cd353df5106d2b9cc5ab83a52287ac3a"
+const abv0Abi = require("../abis/ArtblocksV0.json");
+const abv0Contract = new Ethers.Contract(AB_V0_CONTRACT, abv0Abi, provider);
+
+const AB_V1_CONTRACT = "0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270"
+const abv1Abi = require("../abis/ArtblocksV1.json");
+const abv1Contract = new Ethers.Contract(AB_V1_CONTRACT, abv1Abi, provider);
+
+const erc20TokenAbi = require("../abis/ERC20Token.json");
+
 const OPENSEA_CONTRACT = "0x7f268357a8c2552623316e2562d90e642bb538e5";
 const OLD_OPENSEA_CONTRACT = "0x7be8076f4ea4a4ad08075c2508e481d6c946d12b";
 const wyvernAbi = require("../abis/WyvernExchangeWithBulkCancellations.json");
 const wyvernContract = new Ethers.Contract(OPENSEA_CONTRACT, wyvernAbi, provider);
-const erc20TokenAbi = require("../abis/ERC20Token.json");
 
 const OPENSEA_SEAPORT_CONTRACT = "0x00000000006c3852cbef3e08e8df289169ede581"
 const seaportAbi = require("../abis/SeaPort.json");
 const seaportContract = new Ethers.Contract(OPENSEA_SEAPORT_CONTRACT, seaportAbi, provider);
-
-const CURIO_WRAPPER_CONTRACT = "0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313";
-const curioAbi = require("../abis/CurioERC1155Wrapper.json");
-const curioContract = new Ethers.Contract(CURIO_WRAPPER_CONTRACT, curioAbi, provider);
 
 const LOOKSRARE_CONTRACT = "0x59728544b08ab483533076417fbbb2fd0b17ce3a"
 const looksAbi = require("../abis/LooksRare.json");
@@ -34,26 +40,44 @@ const getEthUsdPrice = async () => await uniswapContract()
 	.then(contract => contract.getReserves())
 	.then(reserves => Number(reserves._reserve0) / Number(reserves._reserve1) * 1e12); // times 10^12 because usdc only has 6 decimals
 
-const curioEventFilter = {
-	address: CURIO_WRAPPER_CONTRACT,
+const abv0EventFilter = {
+	address: AB_V0_CONTRACT,
 	topics: [
-		Ethers.utils.id("TransferSingle(address,address,address,uint256,uint256)")
+		Ethers.utils.id("Transfer(address,address,uint256)")
+	]
+};
+
+const abv1EventFilter = {
+	address: AB_V1_CONTRACT,
+	topics: [
+		Ethers.utils.id("Transfer(address,address,uint256)")
 	]
 };
 
 // this is a helper for the unit test
-async function getEventsFromBlock(blockNum) {
-	return await curioContract.queryFilter(curioEventFilter, fromBlock=blockNum, toBlock=blockNum);
+async function getABv0EventsFromBlock(blockNum) {
+	return await abv0Contract.queryFilter(abv0EventFilter, fromBlock=blockNum, toBlock=blockNum);
+}
+
+async function getABv1EventsFromBlock(blockNum) {
+	return await abv1Contract.queryFilter(abv1EventFilter, fromBlock=blockNum, toBlock=blockNum);
 }
 
 let lastTx;
-async function handleCurioTransfer(tx) {
+async function handleTransfer(tx) {
 	let txReceipt = await provider.getTransactionReceipt(tx.transactionHash);
 	if (lastTx === tx.transactionHash) return {}; // Transaction already seen
 	lastTx = tx.transactionHash
 	let totalPrice = 0
-	let token = 'ETH'
+	let currency = 'ETH'
 	let platforms = []
+
+	let isABv0 = !!txReceipt.logs.filter(x => {
+		return [AB_V0_CONTRACT].includes(x.address.toLowerCase())
+	}).length
+
+	const abContract = isABv0 ? abv0Contract : abv1Contract
+
 	let wyvernLogRaw = txReceipt.logs.filter(x => {
 		return [OPENSEA_CONTRACT, OLD_OPENSEA_CONTRACT].includes(x.address.toLowerCase())
 	});
@@ -71,8 +95,8 @@ async function handleCurioTransfer(tx) {
 
 	// early return check
 	if (wyvernLogRaw.length === 0 && seaportLogRaw.length === 0 && looksRareLogRaw.length === 0) {
-		console.log("found transfer, but no associated OpenSea (Wyvern or Seaport) or LooksRare sale");
-		return { qty: 0, card: 0, totalPrice: 0};
+		console.log(`found transfer ${tx.transactionHash}, but no associated OpenSea (Wyvern or Seaport) or LooksRare sale`);
+		return false
 	}
 
 	// check for OpenSea (Wyvern contract) sale
@@ -80,7 +104,7 @@ async function handleCurioTransfer(tx) {
 		platforms.push("OpenSea")
 		// Check if related token transfers instead of a regular ETH buy
 		let tokenTransfers = txReceipt.logs.filter(x => {
-			return x.topics.includes(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')))
+			return ![AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase()) && x.topics.includes(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')))
 		});
 		// ERC20 token buy
 		let decimals;
@@ -90,7 +114,7 @@ async function handleCurioTransfer(tx) {
 			
 			const symbol = await erc20TokenContract.symbol()
 			decimals = await erc20TokenContract.decimals()
-			token = symbol
+			currency = symbol
 		}
 		for (let log of wyvernLogRaw) {
 			let wyvernLog = wyvernContract.interface.parseLog(log);
@@ -109,8 +133,9 @@ async function handleCurioTransfer(tx) {
 		platforms.push("OpenSea")
 		// Check if related token transfers instead of a regular ETH buy
 		let tokenTransfers = txReceipt.logs.filter(x => {
-			return x.topics.includes(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')))
+			return ![AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase()) && x.topics.includes(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')))
 		});
+
 		// ERC20 token buy
 		let decimals;
 		if (tokenTransfers.length) {
@@ -119,7 +144,7 @@ async function handleCurioTransfer(tx) {
 			
 			const symbol = await erc20TokenContract.symbol()
 			decimals = await erc20TokenContract.decimals()
-			token = symbol
+			currency = symbol
 		}
 		for (let log of seaportLogRaw) {
 			let seaportLog = seaportContract.interface.parseLog(log);
@@ -142,47 +167,59 @@ async function handleCurioTransfer(tx) {
 		platforms.push("LooksRare")
 		for (let log of looksRareLogRaw) {
 			let looksLog = looksContract.interface.parseLog(log);
+
 			totalPrice += parseFloat(Ethers.utils.formatEther(looksLog.args.price.toBigInt()));
 		}
-		token = 'WETH'
+		currency = 'WETH'
 	}
-
 	
-	curioLogRaw = txReceipt.logs.filter(x => {
-		return [CURIO_WRAPPER_CONTRACT].includes(x.address.toLowerCase())
-	});
+	// Check if the value of the item is more than 5 ETH
+	if(totalPrice >= MINIMUM_ETH_AMOUNT) {
+		txLogRaw = txReceipt.logs.filter(x => {
+			return [AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase())
+		});
 
-	if (curioLogRaw.length === 0) {
-		console.error("unable to parse curio transfer from tx receipt!");
-		return { qty: 0, card: 0, totalPrice: 0};
-	}
-	let ethPrice = await getEthUsdPrice()
-
-	let data = {}
-	let buyer;
-	let seller;
-	let sellers = []
-	
-	for (let log of curioLogRaw) {
-		curioLog = curioContract.interface.parseLog(log);
-		// which card was transferred?
-		let qty = curioLog.args._value.toNumber();
-		let card = curioLog.args._id.toString();
-		sellers.push(curioLog.args._from.toLowerCase())
-		buyer = curioLog.args._to.toLowerCase()
-		if (!data[card]) {
-			data[card] = 0;
+		if (txLogRaw.length === 0) {
+			console.error("unable to parse transfer from tx receipt!");
+			return { data: {} };
 		}
-		data[card] += qty
 
+		let ethPrice = await getEthUsdPrice()
+
+		let data = []
+		let buyer;
+		let seller;
+		let sellers = []
+
+		for (let log of txLogRaw) {
+			let txLog = abContract.interface.parseLog(log);
+			let token = txLog.args.tokenId.toString();
+			let projectId = await abContract.tokenIdToProjectId(token)
+			let { projectName, artist } = await abContract.projectDetails(projectId)
+			let tokenId = parseInt(token.replace(projectId, ''), 10)
+
+			sellers.push(txLog.args.from.toLowerCase())
+			buyer = txLog.args.to.toLowerCase()
+
+			if(data.filter(i => i.tokenIdLong === token).length === 0) {
+				data.push({
+					contract: isABv0 ? AB_V0_CONTRACT : AB_V1_CONTRACT,
+					tokenIdLong: token,
+					tokenId,
+					projectName,
+					artist
+				})
+			}
+		}
+
+		seller = (sellers.every((val, i, arr) => val === arr[0])) ? sellers[0] : seller = "Multiple" // Check if multiple sellers, if so, seller is "Multiple" instead of a single seller
+		
+		console.log(`Found sale: ${Object.entries(data).length} piece(s) sold for ${formatValue(totalPrice, 2)} ${currency}`)
+
+		return { data, totalPrice, buyer, seller, ethPrice, currency, platforms }
+	} else {
+		console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low.. tx ${tx.transactionHash}`)
 	}
-	seller = (sellers.every((val, i, arr) => val === arr[0])) ? sellers[0] : seller = "Multiple" // Check if multiple sellers, if so, seller is "Multiple" instead of a single seller
-	let sales = []
-	for ( const [card, qty] of Object.entries(data)) {
-		sales.push(`${qty}x CRO${card}`)
-	}
-	console.log(`Found curio sale: ${sales.join(", ")} sold for ${totalPrice} ${token}`)
-	return { data, totalPrice, buyer, seller, ethPrice, token, platforms };
 }
 
 function watchForTransfers(transferHandler) {
@@ -190,12 +227,19 @@ function watchForTransfers(transferHandler) {
 		console.log("new block: " + blockNumber)
 	});
 
-	provider.on(curioEventFilter, async (log) => {
-		const transfer = await handleCurioTransfer(log);
+	provider.on(abv0EventFilter, async (log) => {
+		const transfer = await handleTransfer(log);
 		if (transfer.data) {
+			transferHandler(transfer);
+		}
+	});
+
+	provider.on(abv1EventFilter, async (log) => {
+		const transfer = await handleTransfer(log);
+		if (transfer?.data) {
 			transferHandler(transfer);
 		}
 	});
 }
 
-module.exports = { watchForTransfers, handleCurioTransfer, getEventsFromBlock };
+module.exports = { watchForTransfers, handleTransfer, getABv0EventsFromBlock, getABv1EventsFromBlock };

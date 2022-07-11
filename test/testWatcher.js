@@ -1,4 +1,4 @@
-const { handleCurioTransfer, getEventsFromBlock } = require("../utils/watcher.js");
+const { handleTransfer, getABv0EventsFromBlock, getABv1EventsFromBlock } = require("../utils/watcher.js");
 const { getUsername } = require("../utils/opensea");
 
 const assert = require("assert");
@@ -6,121 +6,71 @@ const assert = require("assert");
 describe("Watcher", function () {
 	this.timeout(10_000);
 
-	describe("handleCurioTransfer()", function () {
-		it("should correctly find the single card 10 transfer in block 14516246", async function () {
-			const events = await getEventsFromBlock(14516246);
+	describe("handleTransfer()", function () {
+		it("should correctly find Squiggle 6426 transfer in block 15100323", async function () {
+			const events = await getABv0EventsFromBlock(15100323);
 			assert.equal(events.length, 1);
 
-			const transfer = await handleCurioTransfer(events[0])
-			assert.deepEqual(transfer.data, {"10": 1})
-			assert.equal(transfer.totalPrice, 0.3);
-		});
+			const transfer = await handleTransfer(events[0])
 
-		it("should correctly find the 5x card 11 transfer in block 14268794", async function () {
-			const events = await getEventsFromBlock(14268794);
-			assert.equal(events.length, 1);
-
-			const transfer = await handleCurioTransfer(events[0])
-			assert.deepEqual(transfer.data, {"11": 5});
-			assert.equal(transfer.totalPrice, 2);
-		});
-	});
-
-	describe("bundleSale()", function () {
-		it("should return the correct data for a bundle sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0x2ff57b685cab693d9123c2b5ab0a08d5597faab5e3a76e0adc87cc93634f0ede'
-			})
-			assert.deepEqual(details.data, {"10": 1, "12": 1, "15": 1})
-			assert.equal(details.totalPrice, 0.05)
-			assert.equal(details.token, "ETH")
-		})
-	})
-
-	describe("handleNFTXSales()", function () {
-		it("should return the correct data for a NFTX sale (sushiswap)", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0xdc2f0dfc73e4e0f03ed1819b0ba936a35fd44c4f6812da538a681214589dc5f4'
-			})
-
-			assert.equal(details.qty, 0);
-			assert.equal(details.card, 0);
-			assert.equal(details.totalPrice, 0);
-		})
-	})
-
-	describe("handleOpenSeaSales()", function () {
-		it("should return the correct numbers for an ETH sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0xa87070b789b671f9cdc2abe85dc09b11b7548e3cdb7e9e89916c96e585f8d039'
-			})
-
-			assert.equal(details.token, "ETH");
-			assert.equal(details.totalPrice, "0.5");
-		})
-
-		it("should return the correct numbers for a WETH sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0xe0e164a2dd03d1182e5cc8247a398a137996eee5c8be32577e88419d505a3fef'
-			})
-
-			assert.equal(details.token, "WETH");
-			assert.equal(details.totalPrice, "0.371");
-		})
-
-		it("should return the correct numbers for an USDC sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0x020dd8b60a00665c5c0dbbfca67d2e0ed2c7d678eb641d9fa42cd8bd7f2352d4'
-			})
-
-			assert.equal(details.token, "USDC");
-			assert.equal(details.totalPrice, "27777.0");
-
+			assert.equal(transfer.data[0].tokenId, "6426")
+			assert.equal(transfer.totalPrice, 13.7);
 		});
 	});
 
 	describe("handleSeaportSales()", function() {
 		it("should return the correct numbers for an ETH sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0x6c4f3f7a1ee7bccf446bf65f87b342160d8065658ac0e36a07f6c175464ea2f3'
+			const details = await handleTransfer({
+				transactionHash: '0xd2a3d96f0da3f312176a66101c4a54dc48d3e820f3643198170a216f2698e81e'
 			})
 
-			assert.equal(details.token, "ETH");
-			assert.equal(details.totalPrice, "0.49999");
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "14");
 		})
 
 		it("should return the correct numbers for a WETH sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0xa0f3e19e03db8c9286742529828dde8d17d16935b3dbfb34826fcad6ecd2f145'
+			const details = await handleTransfer({
+				transactionHash: '0x178fa3cc70a6873f018f0caeae90fa02c6864bd8bc2e0250e8a1b951aebce42c'
 			})
 
-			assert.equal(details.token, "WETH");
-			assert.equal(details.totalPrice, "0.32");
-		})
+			assert.equal(details.currency, "WETH");
+			assert.equal(details.totalPrice, "11");
+		})	
 	})
 
-	describe("handleLooksRareSales()", function () {
-		it("should return the correct numbers for a WETH sale", async function () {
-			const details = await handleCurioTransfer({
-				transactionHash: '0xe1f9c0f3b55d277da8f72a95c1e98ff023272c59acdc929e878e9c524647e429'
+	describe("handleMultipleSales()", function () {
+		it("should return the correct numbers for a Gem sweep sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0x650cff63072f786d6b0a8eb7afb1ef020104520da31b91bf558edae79f060256'
 			})
 
-			assert.equal(details.token, "WETH");
-			assert.equal(details.totalPrice, "19.25");
+			assert.deepEqual(details.data, [{
+				contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				tokenIdLong: '138000084',
+				tokenId: 84,
+				projectName: 'Geometry Runners',
+				artist: 'Rich Lord'
+			  },
+			  {
+				contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				tokenIdLong: '138000311',
+				tokenId: 311,
+				projectName: 'Geometry Runners',
+				artist: 'Rich Lord'
+			  }])
+
+			assert.deepEqual(details.platforms, ['OpenSea', 'LooksRare'])
+			assert.equal(details.buyer, '0x1936ec5c03ef5448f3303aae23b4559863c639a7');
+			assert.equal(details.seller, 'Multiple');
+			assert.equal(details.totalPrice, '2.7');
 		})
 	})
 
 	describe("getOpenseaUsername()", function () {
-		it("should correctly find the username corresponding to ETH address 0x49468f702436d1e590895ffa7155bcd393ce52ae", async function () {
-			const username = await getUsername("0x49468f702436d1e590895ffa7155bcd393ce52ae");
+		it("should correctly find 'ArtBlocks_Admin' username corresponding to ETH address 0x96dC73c8B5969608C77375F085949744b5177660", async function () {
+			const username = await getUsername("0x96dC73c8B5969608C77375F085949744b5177660");
 
-			assert.equal(username, "crypt0biwan");
-		});
-
-		it("should correctly return a formatted ETH address when there's no username available", async function () {
-			const username = await getUsername("0xbebf173c83ad4c877c04592de0c38567abf66526");
-
-			assert.equal(username, "0xbeb...526");
+			assert.equal(username, "ArtBlocks_Admin");
 		});
 	});
 });

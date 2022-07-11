@@ -1,4 +1,4 @@
-# curio-sales-bot
+# artblocks-sales-bot
 
 # Setup
 Make sure you have the proper Node version installed (see `.nvmrc` file)
@@ -31,3 +31,12 @@ Make sure you set the infura values in .env. The tests will contact the ethereum
 ```
 npm test
 ```
+
+# Notes
+```
+0x059edd72cd353df5106d2b9cc5ab83a52287ac3a      Artblocks v0 contract (Chromie Squiggles, Genesis and Construction Token)
+0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270      Artblocks v1 contract (Everything else)
+```
+
+Media Squiggle 9285 https://media.artblocks.io/thumb/9285.png
+Media Anticyclone 44 https://media.artblocks.io/thumb/304000044.png
