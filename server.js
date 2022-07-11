@@ -1,13 +1,14 @@
 const { WebhookClient } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
 const { watchForTransfers } = require('./utils/watcher');
-const { formatDiscordMessage, formatTwitterMessage } = require('./utils/format');
+const { formatDiscordMessage, formatTwitterMessage, formatValue } = require('./utils/format');
 
 require('dotenv').config()
 
 const {
 	DISCORD_ID, DISCORD_TOKEN,
-	TWITTER_API_KEY, TWITTER_API_KEY_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET
+	TWITTER_API_KEY, TWITTER_API_KEY_SECRET, TWITTER_ACCESS_TOKEN_KEY, TWITTER_ACCESS_TOKEN_SECRET,
+  MINIMUM_ETH_AMOUNT
 } = process.env
 
 const ENABLE_DISCORD = DISCORD_ID !== ''

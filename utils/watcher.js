@@ -1,6 +1,6 @@
 const Ethers = require("ethers");
 require('dotenv').config()
-const { INFURA_PROJECT_ID, INFURA_SECRET, MINIMUM_ETH_AMOUNT } = process.env
+const { INFURA_PROJECT_ID, INFURA_SECRET } = process.env
 const { formatValue } = require('./format')
 
 // set up provider
