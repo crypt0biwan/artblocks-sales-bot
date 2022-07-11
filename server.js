@@ -31,16 +31,20 @@ if(ENABLE_TWITTER) {
 }
 
 const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, currency, platforms }) => {
-  if(ENABLE_DISCORD) {
-    // post to discord
-    const discordMsg = await formatDiscordMessage({ data, totalPrice, buyer, seller, ethPrice, currency, platforms })
-    discordClient.send(discordMsg).catch(console.error)
-  }
+  if(totalPrice >= MINIMUM_ETH_AMOUNT) {
+    if(ENABLE_DISCORD) {
+      // post to discord
+      const discordMsg = await formatDiscordMessage({ data, totalPrice, buyer, seller, ethPrice, currency, platforms })
+      discordClient.send(discordMsg).catch(console.error)
+    }
 
-  if(ENABLE_TWITTER) {
-    // tweet
-    const [twitterMessage, mediaId] = await formatTwitterMessage(twitterClient, { data, totalPrice, buyer, seller, ethPrice, currency, platforms })
-    twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(error) })
+    if(ENABLE_TWITTER) {
+      // tweet
+      const [twitterMessage, mediaId] = await formatTwitterMessage(twitterClient, { data, totalPrice, buyer, seller, ethPrice, currency, platforms })
+      twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(error) })
+    }
+  } else {
+    console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low.. tx ${tx.transactionHash}`)
   }
 }
 

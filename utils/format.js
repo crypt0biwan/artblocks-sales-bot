@@ -85,7 +85,7 @@ const formatDiscordMessage = async ({ data, totalPrice, buyer, seller, ethPrice,
 	}
 }
 
-const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, seller, ethPrice, currency, platforms }) => {
+const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, seller, ethPrice, currency, platforms }, includeFiat = true) => {
 	const buyerUsername = await getUsername(buyer);
 	const sellerUsername = (seller === "Multiple") ? "Multiple" : await getUsername(seller)
 	let twitterMessage;
@@ -105,13 +105,13 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 	const { contract, tokenIdLong, tokenId, projectName, artist } = data[0]
 	const url = getURL(platforms, contract, tokenIdLong)
 	
-	if(['ETH', 'WETH'].includes(currency)) {
-		totalPriceUsdString = `(${formatValue(totalPrice * ethPrice, 2, 'currency')}) `;
+	if(includeFiat && ['ETH', 'WETH'].includes(currency)) {
+		totalPriceUsdString = ` (${formatValue(totalPrice * ethPrice, 2, 'currency')}) `;
 	}
 
 
 	if(data.length > 1) {
-		title = `Multiple "${projectName} by ${artist}" items sold for ${totalPriceString} ${currency} ${totalPriceUsdString}`
+		title = `Multiple "${projectName} by ${artist}" items sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
 		const mediaUrls = []
 
 		data.forEach(item => {
@@ -122,7 +122,7 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 
 		mediaIds = await Promise.all(mediaUrls.map(url => uploadMedia(twitterClient, url)));
 	} else {
-		title = `${projectName} #${tokenId} by ${artist} sold for ${totalPriceString} ${currency} ${totalPriceUsdString}`
+		title = `${projectName} #${tokenId} by ${artist} sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
 		description += `${url}`
 		mediaIds = [await uploadMedia(twitterClient, getMediaUrl(tokenIdLong))];
 	}

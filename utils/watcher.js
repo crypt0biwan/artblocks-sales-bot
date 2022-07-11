@@ -174,52 +174,49 @@ async function handleTransfer(tx) {
 	}
 	
 	// Check if the value of the item is more than 5 ETH
-	if(totalPrice >= MINIMUM_ETH_AMOUNT) {
-		txLogRaw = txReceipt.logs.filter(x => {
-			return [AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase())
-		});
+	txLogRaw = txReceipt.logs.filter(x => {
+		return [AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase())
+	});
 
-		if (txLogRaw.length === 0) {
-			console.error("unable to parse transfer from tx receipt!");
-			return { data: {} };
-		}
-
-		let ethPrice = await getEthUsdPrice()
-
-		let data = []
-		let buyer;
-		let seller;
-		let sellers = []
-
-		for (let log of txLogRaw) {
-			let txLog = abContract.interface.parseLog(log);
-			let token = txLog.args.tokenId.toString();
-			let projectId = await abContract.tokenIdToProjectId(token)
-			let { projectName, artist } = await abContract.projectDetails(projectId)
-			let tokenId = parseInt(token.replace(projectId, ''), 10)
-
-			sellers.push(txLog.args.from.toLowerCase())
-			buyer = txLog.args.to.toLowerCase()
-
-			if(data.filter(i => i.tokenIdLong === token).length === 0) {
-				data.push({
-					contract: isABv0 ? AB_V0_CONTRACT : AB_V1_CONTRACT,
-					tokenIdLong: token,
-					tokenId,
-					projectName,
-					artist
-				})
-			}
-		}
-
-		seller = (sellers.every((val, i, arr) => val === arr[0])) ? sellers[0] : seller = "Multiple" // Check if multiple sellers, if so, seller is "Multiple" instead of a single seller
-		
-		console.log(`Found sale: ${Object.entries(data).length} piece(s) sold for ${formatValue(totalPrice, 2)} ${currency}`)
-
-		return { data, totalPrice, buyer, seller, ethPrice, currency, platforms }
-	} else {
-		console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low.. tx ${tx.transactionHash}`)
+	if (txLogRaw.length === 0) {
+		console.error("unable to parse transfer from tx receipt!");
+		return { data: {} };
 	}
+
+	let ethPrice = await getEthUsdPrice()
+
+	let data = []
+	let buyer;
+	let seller;
+	let sellers = []
+
+	for (let log of txLogRaw) {
+		let txLog = abContract.interface.parseLog(log);
+		let token = txLog.args.tokenId.toString();
+		let projectId = await abContract.tokenIdToProjectId(token)
+		let { projectName, artist } = await abContract.projectDetails(projectId)
+		let tokenId = parseInt(token.replace(projectId, ''), 10)
+
+		sellers.push(txLog.args.from.toLowerCase())
+		buyer = txLog.args.to.toLowerCase()
+
+		if(data.filter(i => i.tokenIdLong === token).length === 0) {
+			data.push({
+				contract: isABv0 ? AB_V0_CONTRACT : AB_V1_CONTRACT,
+				tokenIdLong: token,
+				tokenId,
+				projectName,
+				artist
+			})
+		}
+	}
+
+	seller = (sellers.every((val, i, arr) => val === arr[0])) ? sellers[0] : seller = "Multiple" // Check if multiple sellers, if so, seller is "Multiple" instead of a single seller
+	
+	console.log(`Found sale: ${Object.entries(data).length} piece(s) sold for ${formatValue(totalPrice, 2)} ${currency}`)
+
+	return { data, totalPrice, buyer, seller, ethPrice, currency, platforms }
+	
 }
 
 function watchForTransfers(transferHandler) {

@@ -73,27 +73,22 @@ describe("Formatter", function () {
 
 	describe("formatTwitterMessage()", function () {
 		it("should format single sales correctly", async function () {
-			const [twitterMessage, mediaId] = await formatTwitterMessage(mockTwitterClient, singleSale);
+			const [twitterMessage, mediaId] = await formatTwitterMessage(mockTwitterClient, singleSale, false);
+			const expectedMessage = `Anticyclone #44 by William Mapan sold for 14.00 ETH\nPlatform: OpenSea\nBuyer: RHA1\nSeller: 0xc19...13d\nhttps://opensea.io/assets/ethereum/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270/304000044`;
 
-			console.log(twitterMessage, mediaId)
-
-			// const expectedMessage = `Anticyclone #44 sold for 14 ETH ($17304.00) on OpenSea!\nBuyer: RHA1\nSeller: 0xc19...13d\nhttps://opensea.io/assets/ethereum/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270/304000044`;
-			// assert.equal(expectedMessage, twitterMessage);
-			// assert.notEqual(mediaId, null);
-			// assert.notEqual(mediaId, "");
+			assert.equal(expectedMessage, twitterMessage);
+			assert.notEqual(mediaId, null);
+			assert.notEqual(mediaId, "");
 		});
 
 		it("should format multi sales correctly", async function () {
-			const [twitterMessage, mediaIds] = await formatTwitterMessage(mockTwitterClient, multiSale);
+			const [twitterMessage, mediaIds] = await formatTwitterMessage(mockTwitterClient, multiSale, false);
+			const expectedMessage = `Multiple "Geometry Runners by Rich Lord" items sold for 2.70 WETH\nPlatforms: OpenSea, LooksRare\nBuyer: 0x193...9a7\nSeller: Multiple\n- Geometry Runners #84\n- Geometry Runners #311\n`;
 
-			console.log(twitterMessage);
-			// const expectedMessage = `Multiple Curio Cards sold for a total of 1.24 ETH ($2524.96)!\n2x Curio 9\n1x Curio 10\n3x Curio 11`;
-			// assert.equal(expectedMessage, twitterMessage);
-
-			// console.log(mediaIds);
-			// assert.equal(mediaIds.length, 3);
-			// assert.notEqual(mediaIds[0], null);
-			// assert.notEqual(mediaIds[0], "");
+			assert.equal(expectedMessage, twitterMessage);
+			assert.equal(mediaIds.length, 2);
+			assert.notEqual(mediaIds[0], null);
+			assert.notEqual(mediaIds[0], "");
 		});
 	});
 });
