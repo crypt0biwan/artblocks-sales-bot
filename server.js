@@ -45,7 +45,7 @@ const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, curr
       twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(error) })
     }
   } else {
-    console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low.. tx ${tx.transactionHash}`)
+    console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low..`)
   }
 }
 
