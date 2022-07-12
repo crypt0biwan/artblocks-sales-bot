@@ -54,6 +54,24 @@ const multiSale = {
 	platforms: [ 'OpenSea', 'LooksRare' ]
 }
 
+const archipelagoSale = {
+	data: [
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '78000631',
+		tokenId: 631,
+		projectName: 'Fidenza',
+		artist: 'Tyler Hobbs'
+	  }
+	],
+	totalPrice: 459.69,
+	buyer: '0xbb367b95c4e118b872ebaa64734b2fcfa5c252ef',
+	seller: '0xf2b011dbadf7cc0d472c7ba161205f422bb6702c',
+	ethPrice: 1070.9577870289213,
+	currency: 'ETH',
+	platforms: [ 'Archipelago' ]
+}
+
 describe("Formatter", function () {
 	this.timeout(10_000);
 
@@ -62,6 +80,12 @@ describe("Formatter", function () {
 			const discordMsg = await formatDiscordMessage(singleSale);
 
 			assert.equal(discordMsg.embeds[0].title, 'Anticyclone #44 by William Mapan')
+		});
+
+		it("should format archipelagoSale sales correctly", async function () {
+			const discordMsg = await formatDiscordMessage(archipelagoSale);
+			
+			assert.equal(discordMsg.embeds[0].title, 'Fidenza #631 by Tyler Hobbs')
 		});
 
 		it("should format multiple sales correctly", async function () {
@@ -75,6 +99,15 @@ describe("Formatter", function () {
 		it("should format single sales correctly", async function () {
 			const [twitterMessage, mediaId] = await formatTwitterMessage(mockTwitterClient, singleSale, false);
 			const expectedMessage = `Anticyclone #44 by William Mapan sold for 14.00 ETH\nPlatform: OpenSea\nBuyer: RHA1\nSeller: 0xc19...13d\nhttps://opensea.io/assets/ethereum/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270/304000044`;
+
+			assert.equal(expectedMessage, twitterMessage);
+			assert.notEqual(mediaId, null);
+			assert.notEqual(mediaId, "");
+		});
+
+		it("should format archipelagoSale sales correctly", async function () {
+			const [twitterMessage, mediaId] = await formatTwitterMessage(mockTwitterClient, archipelagoSale, false);
+			const expectedMessage = `Fidenza #631 by Tyler Hobbs sold for 459.69 ETH\nPlatform: Archipelago\nBuyer: 0xbb3...2ef\nSeller: abc_123_0xf2\nhttps://archipelago.art/collections/fidenza/631`;
 
 			assert.equal(expectedMessage, twitterMessage);
 			assert.notEqual(mediaId, null);

@@ -2,10 +2,15 @@ const COLORS = require('./colors')
 const { getUsername } = require('./opensea')
 const axios = require('axios')
 
-const getURL = (platforms, contract, tokenIdLong) => {
-	return platforms[0] === 'LooksRare'
-	? `https://looksrare.org/collections/${contract}/${tokenIdLong}`
-	: `https://opensea.io/assets/ethereum/${contract}/${tokenIdLong}`
+const getURL = (platforms, contract, tokenIdLong, tokenId, collectionName) => {
+	switch(platforms[0]) {
+		case 'Archipelago':
+			return `https://archipelago.art/collections/${collectionName.toLowerCase().replace(/ /g, '-')}/${tokenId}`
+		case 'LooksRare':
+			return `https://looksrare.org/collections/${contract}/${tokenIdLong}`
+		default:
+			return `https://opensea.io/assets/ethereum/${contract}/${tokenIdLong}`
+	}
 }
 const getMediaUrl = (tokenIdLong) => `https://media.artblocks.io/thumb/${tokenIdLong}.png`
 
@@ -46,7 +51,7 @@ const formatDiscordMessage = async ({ data, totalPrice, buyer, seller, ethPrice,
 	const platformString = `${platforms.length > 1 ? "Platforms" : "Platform"}: **${platforms.join(", ")}**`
 	let description = `${platformString}\nBuyer: **${buyerUsername}**\nSeller: **${sellerUsername}**`
 	const { contract, tokenIdLong, tokenId, projectName, artist } = data[0]
-	const url = getURL(platforms, contract, tokenIdLong)
+	const url = getURL(platforms, contract, tokenIdLong, tokenId, projectName)
 	
 	if(data.length > 1) {
 		title = `Multiple "${projectName} by ${artist}" items sold`
@@ -103,7 +108,7 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 	let description = `${platformString}\nBuyer: ${buyerUsername}\nSeller: ${sellerUsername}\n`
 	
 	const { contract, tokenIdLong, tokenId, projectName, artist } = data[0]
-	const url = getURL(platforms, contract, tokenIdLong)
+	const url = getURL(platforms, contract, tokenIdLong, tokenId, projectName)
 	
 	if(includeFiat && ['ETH', 'WETH'].includes(currency)) {
 		totalPriceUsdString = ` (${formatValue(totalPrice * ethPrice, 2, 'currency')}) `;
