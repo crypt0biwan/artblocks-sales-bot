@@ -155,9 +155,15 @@ async function handleTransfer(tx) {
 				// regular ETH buy
 				let chunks = log.data.substring(2, log.data.length).match(/.{1,64}/g)
 
-				totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[13], 'hex'))))
-				totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[18], 'hex'))))
-				totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[23], 'hex'))))
+				try {
+					totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[13], 'hex'))))
+					totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[18], 'hex'))))
+					totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[23], 'hex'))))
+				} catch(e) {
+					// added some logging since the bot crashes no a rare occasion
+					console.log(e)
+					console.log(log)
+				}
 			}
 		}
 	}
