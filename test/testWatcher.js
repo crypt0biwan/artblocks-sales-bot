@@ -38,6 +38,27 @@ describe("Watcher", function () {
 		})	
 	})
 
+	describe("handleArchipelagoSales()", function() {
+		it("should return the correct numbers for an ETH sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0x010736855caeaa9ae1185fcef95a3bb116dd3422004cc8ddd8c20451c1c301bf'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				  tokenIdLong: '78000631',
+				  tokenId: 631,
+				  projectName: 'Fidenza',
+				  artist: 'Tyler Hobbs'
+				}
+			])
+			assert.deepEqual(details.platforms, ['Archipelago'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "459.69");
+		})	
+	})
+
 	describe("handleMultipleSales()", function () {
 		it("should return the correct numbers for a Gem sweep sale", async function () {
 			const details = await handleTransfer({
