@@ -32,6 +32,10 @@ const LOOKSRARE_CONTRACT = "0x59728544b08ab483533076417fbbb2fd0b17ce3a"
 const looksAbi = require("../abis/LooksRare.json");
 const looksContract = new Ethers.Contract(LOOKSRARE_CONTRACT, looksAbi, provider);
 
+const ARCHIPELAGO_CONTRACT = "0x555598409fe9a72f0a5e423245c34555f6445555"
+const archipelagoAbi = require("../abis/ArchipelagoMarket.json")
+const archipelagoContract = new Ethers.Contract(ARCHIPELAGO_CONTRACT, archipelagoAbi, provider)
+
 const UNISWAP_USDC_ETH_LP_CONTRACT = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc";
 const uniswapAbi = require("../abis/Uniswap_USDC_ETH_LP.json");
 const uniswapContract = async () => await new Ethers.Contract(UNISWAP_USDC_ETH_LP_CONTRACT, uniswapAbi, provider);
@@ -93,9 +97,15 @@ async function handleTransfer(tx) {
 		].includes(x.topics[0])
 	});
 
+	let archipelagoLogRaw = txReceipt.logs.filter(x => {
+		return [
+			Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Trade(bytes32,address,address,uint256,uint256,uint256,address)'))
+		].includes(x.topics[0])
+	});
+
 	// early return check
-	if (wyvernLogRaw.length === 0 && seaportLogRaw.length === 0 && looksRareLogRaw.length === 0) {
-		console.log(`found transfer ${tx.transactionHash}, but no associated OpenSea (Wyvern or Seaport) or LooksRare sale`);
+	if (wyvernLogRaw.length === 0 && seaportLogRaw.length === 0 && looksRareLogRaw.length === 0 && archipelagoLogRaw.length === 0) {
+		console.log(`found transfer ${tx.transactionHash}, but no associated OpenSea (Wyvern or Seaport), LooksRare or Archipelago sale`);
 		return false
 	}
 
@@ -178,7 +188,17 @@ async function handleTransfer(tx) {
 		}
 		currency = 'WETH'
 	}
-	
+
+	if(archipelagoLogRaw.length) {
+		platforms.push("Archipelago")
+
+		for (let log of archipelagoLogRaw) {
+			let archipelagoLog = archipelagoContract.interface.parseLog(log);
+
+			totalPrice += parseFloat(Ethers.utils.formatEther(archipelagoLog.args.price.toBigInt()));
+		}
+	}
+
 	// Check if the value of the item is more than 5 ETH
 	txLogRaw = txReceipt.logs.filter(x => {
 		return [AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase())
@@ -186,7 +206,7 @@ async function handleTransfer(tx) {
 
 	if (txLogRaw.length === 0) {
 		console.error("unable to parse transfer from tx receipt!");
-		return { data: {} };
+		return false
 	}
 
 	let ethPrice = await getEthUsdPrice()
