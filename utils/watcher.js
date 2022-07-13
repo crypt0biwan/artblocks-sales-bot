@@ -165,7 +165,7 @@ async function handleTransfer(tx) {
 				// regular ETH buy
 				let chunks = log.data.substring(2, log.data.length).match(/.{1,64}/g)
 
-				if(chunks.length === 30) {
+				if(chunks.length >= 24) {
 					try {
 						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[13], 'hex'))))
 						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[18], 'hex'))))
