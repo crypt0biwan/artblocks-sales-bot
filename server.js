@@ -31,7 +31,7 @@ if(ENABLE_TWITTER) {
   twitterClient = _twitterClient.readWrite
 }
 
-const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, currency, platforms }) => {
+const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, currency, platforms, transactionHash }) => {
   if(totalPrice >= MINIMUM_ETH_AMOUNT) {
     if(ENABLE_DISCORD) {
       // post to discord
@@ -45,7 +45,7 @@ const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, curr
       twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(err) })
     }
   } else {
-    console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low..`)
+    console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low.. tx id ${transactionHash}`)
   }
 }
 

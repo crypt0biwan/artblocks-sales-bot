@@ -35,7 +35,26 @@ describe("Watcher", function () {
 
 			assert.equal(details.currency, "WETH");
 			assert.equal(details.totalPrice, "11");
-		})	
+		})
+
+		it("should pass with extra check for weird event logs", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0x67aa3212a84750056bf206de808647a2325353f14c57855e09a6df1f7ae53ec6'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				  tokenIdLong: '89000401',
+				  tokenId: 401,
+				  projectName: 'Dreams',
+				  artist: 'Joshua Bagley'
+				}
+			  ])
+			assert.deepEqual(details.platforms, ['OpenSea'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "1.5000000000000002");
+		})
 	})
 
 	describe("handleArchipelagoSales()", function() {
@@ -94,4 +113,25 @@ describe("Watcher", function () {
 			assert.equal(username, "ArtBlocks_Admin");
 		});
 	});
+
+	describe("getBlockWithDifferentSales()", function () {
+		it("should correctly handle different sales in the same block", async function () {
+			const events = await getABv1EventsFromBlock(15135703)
+
+			const details1 = await handleTransfer(events[0])
+			const details2 = await handleTransfer(events[1])
+
+			assert.equal(details1.currency, "ETH");
+			assert.equal(details1.totalPrice, "6.75");
+			assert.equal(details1.data[0].tokenId, 626);
+			assert.equal(details1.data[0].projectName, 'Singularity');
+			assert.equal(details1.data[0].artist, 'Hideki Tsukamoto');	
+
+			assert.equal(details2.currency, "ETH");
+			assert.equal(details2.totalPrice, "4.69");
+			assert.equal(details2.data[0].tokenId, 435);
+			assert.equal(details2.data[0].projectName, 'Running Moon');
+			assert.equal(details2.data[0].artist, 'Licia He');
+		})
+	})
 });

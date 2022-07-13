@@ -243,7 +243,7 @@ async function handleTransfer(tx) {
 	
 	console.log(`Found sale: ${Object.entries(data).length} piece(s) sold for ${formatValue(totalPrice, 2)} ${currency}`)
 
-	return { data, totalPrice, buyer, seller, ethPrice, currency, platforms }
+	return { data, totalPrice, buyer, seller, ethPrice, currency, platforms, transactionHash: tx.transactionHash}
 	
 }
 

@@ -54,6 +54,53 @@ const multiSale = {
 	platforms: [ 'OpenSea', 'LooksRare' ]
 }
 
+const multiOpenseaSale = {
+	data: [
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '304000231',
+		tokenId: 231,
+		projectName: 'Anticyclone',
+		artist: 'William Mapan'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '304000154',
+		tokenId: 154,
+		projectName: 'Anticyclone',
+		artist: 'William Mapan'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '304000569',
+		tokenId: 569,
+		projectName: 'Anticyclone',
+		artist: 'William Mapan'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '304000337',
+		tokenId: 337,
+		projectName: 'Anticyclone',
+		artist: 'William Mapan'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '304000129',
+		tokenId: 129,
+		projectName: 'Anticyclone',
+		artist: 'William Mapan'
+	  }
+	],
+	totalPrice: 19.9,
+	buyer: '0xf0624f08ee09ebc9c7359d405d91a3e31a3b9faa',
+	seller: 'Multiple',
+	ethPrice: 1077.0431502781184,
+	currency: 'WETH', // TODO check why this is WETH instead of ETH
+	platforms: [ 'OpenSea', 'OpenSea' ],
+	transactionHash: '0x7e9f8dbbf56b3105091d8f07d38b8e65a72964185ace25ecd3a76afa5685f585'
+}
+
 const archipelagoSale = {
 	data: [
 	  {
@@ -112,6 +159,18 @@ describe("Formatter", function () {
 			assert.equal(expectedMessage, twitterMessage);
 			assert.notEqual(mediaId, null);
 			assert.notEqual(mediaId, "");
+		});
+
+		it("should format multi opensea sales correctly", async function () {
+			const [twitterMessage, mediaIds] = await formatTwitterMessage(mockTwitterClient, multiOpenseaSale, false);
+			const expectedMessage = `Multiple "Anticyclone by William Mapan" items sold for 19.90 WETH\nPlatforms: OpenSea, OpenSea\nBuyer: GSRblue\nSeller: Multiple\n- Anticyclone #231\n- Anticyclone #154\n- Anticyclone #569\n- Anticyclone #337\n- Anticyclone #129\n`;
+
+			assert.equal(expectedMessage, twitterMessage);
+
+			// 5 NFTs sold, but only 4 media ids (twitter restriction)
+			assert.equal(mediaIds.length, 4);
+			assert.notEqual(mediaIds[0], null);
+			assert.notEqual(mediaIds[0], "");
 		});
 
 		it("should format multi sales correctly", async function () {
