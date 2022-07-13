@@ -42,7 +42,7 @@ const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, curr
     if(ENABLE_TWITTER) {
       // tweet
       const [twitterMessage, mediaId] = await formatTwitterMessage(twitterClient, { data, totalPrice, buyer, seller, ethPrice, currency, platforms })
-      twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(error) })
+      twitterClient.v1.tweet(twitterMessage, { media_ids: mediaId }).catch(err => { console.log(JSON.stringify(twitterMessage)); console.log(err) })
     }
   } else {
     console.log(`Price of sale (${formatValue(totalPrice, 2)}) too low..`)
