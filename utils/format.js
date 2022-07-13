@@ -117,13 +117,16 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 
 	if(data.length > 1) {
 		title = `Multiple "${projectName} by ${artist}" items sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
-		const mediaUrls = []
+		let mediaUrls = []
 
 		data.forEach(item => {
 			const { contract, tokenIdLong, tokenId, projectName, artist } = item
 			description += `- ${projectName} #${tokenId}\n`
 			mediaUrls.push(getMediaUrl(tokenIdLong))
 		});
+
+		// Tweet must not have more than 4 mediaIds. (Twitter code 324)
+		mediaUrls = mediaUrls.slice(0, 4)
 
 		mediaIds = await Promise.all(mediaUrls.map(url => uploadMedia(twitterClient, url)));
 	} else {
