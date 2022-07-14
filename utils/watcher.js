@@ -36,6 +36,10 @@ const ARCHIPELAGO_CONTRACT = "0x555598409fe9a72f0a5e423245c34555f6445555"
 const archipelagoAbi = require("../abis/ArchipelagoMarket.json")
 const archipelagoContract = new Ethers.Contract(ARCHIPELAGO_CONTRACT, archipelagoAbi, provider)
 
+const X2Y2_CONTRACT = "0x74312363e45dcaba76c59ec49a7aa8a65a67eed3"
+const x2y2Abi = require("../abis/X2Y2Market.json")
+const x2y2Contract = new Ethers.Contract(X2Y2_CONTRACT, x2y2Abi, provider)
+
 const UNISWAP_USDC_ETH_LP_CONTRACT = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc";
 const uniswapAbi = require("../abis/Uniswap_USDC_ETH_LP.json");
 const uniswapContract = async () => await new Ethers.Contract(UNISWAP_USDC_ETH_LP_CONTRACT, uniswapAbi, provider);
@@ -103,9 +107,15 @@ async function handleTransfer(tx) {
 		].includes(x.topics[0])
 	});
 
+	let x2y2LogRaw = txReceipt.logs.filter(x => {
+		return [
+			Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('EvProfit(bytes32,address,address,uint256)'))
+		].includes(x.topics[0])
+	})
+
 	// early return check
-	if (wyvernLogRaw.length === 0 && seaportLogRaw.length === 0 && looksRareLogRaw.length === 0 && archipelagoLogRaw.length === 0) {
-		console.log(`found transfer ${tx.transactionHash}, but no associated OpenSea (Wyvern or Seaport), LooksRare or Archipelago sale`);
+	if (wyvernLogRaw.length === 0 && seaportLogRaw.length === 0 && looksRareLogRaw.length === 0 && archipelagoLogRaw.length === 0 && x2y2LogRaw.length === 0) {
+		console.log(`found transfer ${tx.transactionHash}, but no associated OpenSea (Wyvern or Seaport), LooksRare, Archipelago or X2Y2 sale`);
 		return false
 	}
 
@@ -200,6 +210,16 @@ async function handleTransfer(tx) {
 			totalPrice += parseFloat(Ethers.utils.formatEther(archipelagoLog.args.price.toBigInt()));
 		}
 	}
+
+	if(x2y2LogRaw.length) {
+		platforms.push("X2Y2")
+
+		for (let log of x2y2LogRaw) {
+			let x2y2Log = x2y2Contract.interface.parseLog(log);
+
+			totalPrice += parseFloat(Ethers.utils.formatEther(x2y2Log.args.amount.toBigInt()));
+		}
+	}	
 
 	// Check if the value of the item is more than 5 ETH
 	txLogRaw = txReceipt.logs.filter(x => {
