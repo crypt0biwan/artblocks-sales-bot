@@ -78,6 +78,27 @@ describe("Watcher", function () {
 		})	
 	})
 
+	describe("handleX2Y2Sales()", function() {
+		it("should return the correct numbers for a X2Y2 ETH sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0xfe52e31e245200bf8f776b62bcaa22f52682c1965307566de62369ccdf994817'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				  tokenIdLong: '304000191',
+				  tokenId: 191,
+				  projectName: 'Anticyclone',
+				  artist: 'William Mapan'
+				}
+			  ])
+			assert.deepEqual(details.platforms, ['X2Y2'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "10.6465");
+		})	
+	})
+
 	describe("handleMultipleSales()", function () {
 		it("should return the correct numbers for a Gem sweep sale", async function () {
 			const details = await handleTransfer({

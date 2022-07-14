@@ -8,6 +8,8 @@ const getURL = (platforms, contract, tokenIdLong, tokenId, collectionName) => {
 			return `https://archipelago.art/collections/${collectionName.toLowerCase().replace(/ /g, '-')}/${tokenId}`
 		case 'LooksRare':
 			return `https://looksrare.org/collections/${contract}/${tokenIdLong}`
+		case 'X2Y2':
+			return `https://x2y2.io/eth/${contract}/${tokenIdLong}`
 		default:
 			return `https://opensea.io/assets/ethereum/${contract}/${tokenIdLong}`
 	}
