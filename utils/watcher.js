@@ -179,8 +179,9 @@ async function handleTransfer(tx) {
 				// method 0x9d9af8e3
 				
 				try {
-					for(let arg of seaportLog.args[seaportLog.args.length-1]) {
-						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(arg.amount, 'hex')))
+					// get the transfers of the last argument of the OrderFulfilled method
+					for(let transfer of seaportLog.args[seaportLog.args.length-1]) {
+						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(transfer.amount, 'hex')))
 					} 
 				} catch(e) {
 					// added some logging since the bot crashes no a rare occasion
