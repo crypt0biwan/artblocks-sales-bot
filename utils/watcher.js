@@ -173,18 +173,19 @@ async function handleTransfer(tx) {
 				totalPrice += parseFloat(Ethers.utils.formatUnits(seaportLog.args.offer[0].amount.toBigInt(), decimals))
 			} else {
 				// regular ETH buy
-				let chunks = log.data.substring(2, log.data.length).match(/.{1,64}/g)
-
-				if(chunks.length >= 24) {
-					try {
-						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[13], 'hex'))))
-						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[18], 'hex'))))
-						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(Buffer.from(chunks[23], 'hex'))))
-					} catch(e) {
-						// added some logging since the bot crashes no a rare occasion
-						console.log(e)
-						console.log(log)
-					}
+				
+				// OrderFulfilled(bytes32 orderHash,address offerer,address zone,address recipient,(uint8 itemType,address token,uint256 identifier,uint256 amount)[],(uint8 itemType,address token,uint256 identifier,uint256 amount,address recipient)[])
+				// OrderFulfilled(bytes32,address,address,address,(uint8,address,uint256,uint256)[],(uint8,address,uint256,uint256,address)[])
+				// method 0x9d9af8e3
+				
+				try {
+					for(let arg of seaportLog.args[seaportLog.args.length-1]) {
+						totalPrice += parseFloat(Ethers.utils.formatEther(Ethers.BigNumber.from(arg.amount, 'hex')))
+					} 
+				} catch(e) {
+					// added some logging since the bot crashes no a rare occasion
+					console.log(e)
+					console.log(log)
 				}
 			}
 		}
