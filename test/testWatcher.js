@@ -37,6 +37,33 @@ describe("Watcher", function () {
 			assert.equal(details.totalPrice, "11");
 		})
 
+		// https://opensea.io/bundles/primordial-pack-of-2-5ZQ
+		it("should return the correct numbers for a bundle sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0xea830f3334e22175f081fb1d58b00adb80944964717edddde6759845391d3d89'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				  tokenIdLong: '302000187',
+				  tokenId: 187,
+				  projectName: 'Primordial',
+				  artist: 'Jacob Gold'
+				},
+				{
+				  contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+				  tokenIdLong: '302000186',
+				  tokenId: 186,
+				  projectName: 'Primordial',
+				  artist: 'Jacob Gold'
+				}
+			])
+			assert.deepEqual(details.platforms, ['OpenSea'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "0.2");
+		})
+
 		it("should pass with extra check for weird event logs", async function () {
 			const details = await handleTransfer({
 				transactionHash: '0x67aa3212a84750056bf206de808647a2325353f14c57855e09a6df1f7ae53ec6'
