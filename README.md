@@ -2,7 +2,7 @@
 This sales bot is a fork of [The Curio Cards sales bot](https://github.com/crypt0biwan/curio-sales-bot). Modified to work with the v0 and v1 contracts of Artblocks.
 You can see the tweets it outputs at [https://twitter.com/artblocks_sales](https://twitter.com/artblocks_sales)
 
-Special thanks to [Kian](https://github.com/fafrd) which initially setup the source of the bot 🫡
+Special thanks to [Kian](https://github.com/fafrd) who initially setup the source of the bot 🫡
 
 # Setup
 Make sure you have the proper Node version installed (see `.nvmrc` file)
