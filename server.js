@@ -1,6 +1,6 @@
 const { WebhookClient } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
-const { watchForTransfers } = require('./utils/watcher');
+const { watchForTransfersType1, watchForTransfersType2 } = require('./utils/watcher');
 const { formatDiscordMessage, formatTwitterMessage, formatValue } = require('./utils/format');
 
 require('dotenv').config()
@@ -49,4 +49,5 @@ const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, curr
   }
 }
 
-watchForTransfers(transferHandler)
+watchForTransfersType1(transferHandler)
+watchForTransfersType2(transferHandler)

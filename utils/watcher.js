@@ -269,7 +269,7 @@ async function handleTransfer(tx) {
 	
 }
 
-function watchForTransfers(transferHandler) {
+function watchForTransfersType1(transferHandler) {
 	provider.on("block", (blockNumber) => {
 		console.log("new block: " + blockNumber)
 	});
@@ -281,6 +281,10 @@ function watchForTransfers(transferHandler) {
 		}
 	});
 
+}
+
+function watchForTransfersType2(transferHandler) {
+
 	provider.on(abv1EventFilter, async (log) => {
 		const transfer = await handleTransfer(log);
 		if (transfer?.data) {
@@ -289,4 +293,4 @@ function watchForTransfers(transferHandler) {
 	});
 }
 
-module.exports = { watchForTransfers, handleTransfer, getABv0EventsFromBlock, getABv1EventsFromBlock };
+module.exports = { watchForTransfersType1, watchForTransfersType2, handleTransfer, getABv0EventsFromBlock, getABv1EventsFromBlock };
