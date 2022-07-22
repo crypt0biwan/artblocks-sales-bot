@@ -42,11 +42,16 @@ const x2y2Contract = new Ethers.Contract(X2Y2_CONTRACT, x2y2Abi, provider)
 
 const UNISWAP_USDC_ETH_LP_CONTRACT = "0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc";
 const uniswapAbi = require("../abis/Uniswap_USDC_ETH_LP.json");
-const uniswapContract = async () => await new Ethers.Contract(UNISWAP_USDC_ETH_LP_CONTRACT, uniswapAbi, provider);
+const uniswapContract = new Ethers.Contract(UNISWAP_USDC_ETH_LP_CONTRACT, uniswapAbi, provider);
 
-const getEthUsdPrice = async () => await uniswapContract()
-	.then(contract => contract.getReserves())
+let ethPrice = -1;
+
+const getEthUsdPrice = async () => {
+	const data = await uniswapContract.getReserves()
 	.then(reserves => Number(reserves._reserve0) / Number(reserves._reserve1) * 1e12); // times 10^12 because usdc only has 6 decimals
+
+	ethPrice = data
+}
 
 const abv0EventFilter = {
 	address: AB_V0_CONTRACT,
@@ -72,13 +77,16 @@ async function getABv1EventsFromBlock(blockNum) {
 }
 
 let lastTx;
+
 async function handleTransfer(tx) {
 	let txReceipt = await provider.getTransactionReceipt(tx.transactionHash);
 	if (lastTx === tx.transactionHash) return {}; // Transaction already seen
 	lastTx = tx.transactionHash
+
 	let totalPrice = 0
 	let currency = 'ETH'
 	let platforms = []
+	let data = []
 
 	let isABv0 = !!txReceipt.logs.filter(x => {
 		return [AB_V0_CONTRACT].includes(x.address.toLowerCase())
@@ -233,9 +241,6 @@ async function handleTransfer(tx) {
 		return false
 	}
 
-	let ethPrice = await getEthUsdPrice()
-
-	let data = []
 	let buyer;
 	let seller;
 	let sellers = []
@@ -272,6 +277,8 @@ async function handleTransfer(tx) {
 function watchForTransfers(transferHandler) {
 	provider.on("block", (blockNumber) => {
 		console.log("new block: " + blockNumber)
+
+		getEthUsdPrice()
 	});
 
 	provider.on(abv0EventFilter, async (log) => {
