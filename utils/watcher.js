@@ -278,7 +278,10 @@ function watchForTransfers(transferHandler) {
 	provider.on("block", (blockNumber) => {
 		console.log("new block: " + blockNumber)
 
-		getEthUsdPrice()
+		// get ETH price every 10 blocks or if the variable isn't set yet
+		if(ethPrice === -1 || blockNumber % 10 === 0) {
+			getEthUsdPrice()
+		}
 	});
 
 	provider.on(abv0EventFilter, async (log) => {
