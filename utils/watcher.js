@@ -250,7 +250,7 @@ async function handleTransfer(tx) {
 		let token = txLog.args.tokenId.toString();
 		let projectId = await abContract.tokenIdToProjectId(token)
 		let { projectName, artist } = await abContract.projectDetails(projectId)
-		let tokenId = parseInt(token.replace(projectId, ''), 10)
+		let tokenId = projectId > 0 ? parseInt(token.replace(projectId, ''), 10) : token
 
 		sellers.push(txLog.args.from.toLowerCase())
 		buyer = txLog.args.to.toLowerCase()
