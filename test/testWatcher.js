@@ -82,6 +82,64 @@ describe("Watcher", function () {
 			assert.equal(details.currency, "ETH");
 			assert.equal(details.totalPrice, "1.5000000000000002");
 		})
+
+		// fix for https://twitter.com/artblocks_sales/status/1556791409109254144 (zero was removed from token id)
+		it("should return the correct data for a Squiggle sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0x5fcedd2f280cea5cf4d860ec075d49658ce6aa9123e283bbb5ca20ae74ce9f2e'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0x059edd72cd353df5106d2b9cc5ab83a52287ac3a',
+				  tokenIdLong: '6109',
+				  tokenId: 6109,
+				  projectName: 'Chromie Squiggle',
+				  artist: 'Snowfro'
+				}
+			  ])
+			assert.deepEqual(details.platforms, ['OpenSea'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "35");
+		})
+
+		it("should return the correct data for a Construction Token sale", async function() {
+			const details = await handleTransfer({
+				transactionHash: '0x830ab6379d090d2cd567572d2b7db3b1ac7275c2c8cdcf098142e37ae273cdf3'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0x059edd72cd353df5106d2b9cc5ab83a52287ac3a',
+				  tokenIdLong: '2000197',
+				  tokenId: 197,
+				  projectName: 'Construction Token',
+				  artist: 'Jeff Davis'
+				}
+			  ])
+			assert.deepEqual(details.platforms, ['OpenSea'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "5.69");
+		})
+
+		it("should return the correct data for a Genesis Token sale", async function() {
+			const details = await handleTransfer({
+				transactionHash: '0x4243e8b116f381a43878bb66faeec080b2107225e6dd5497b4679b64d4572990'
+			})
+
+			assert.deepEqual(details.data, [
+				{
+				  contract: '0x059edd72cd353df5106d2b9cc5ab83a52287ac3a',
+				  tokenIdLong: '1000063',
+				  tokenId: 63,
+				  projectName: 'Genesis',
+				  artist: 'DCA'
+				}
+			  ])
+			assert.deepEqual(details.platforms, ['OpenSea'])
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "10.690000000000001");
+		})
 	})
 
 	describe("handleArchipelagoSales()", function() {

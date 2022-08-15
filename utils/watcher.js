@@ -250,7 +250,7 @@ async function handleTransfer(tx) {
 		let token = txLog.args.tokenId.toString();
 		let projectId = await abContract.tokenIdToProjectId(token)
 		let { projectName, artist } = await abContract.projectDetails(projectId)
-		let tokenId = parseInt(token.replace(projectId, ''), 10)
+		let tokenId = projectId > 0 ? parseInt(token.replace(projectId, ''), 10) : token
 
 		sellers.push(txLog.args.from.toLowerCase())
 		buyer = txLog.args.to.toLowerCase()
@@ -278,7 +278,10 @@ function watchForTransfers(transferHandler) {
 	provider.on("block", (blockNumber) => {
 		console.log("new block: " + blockNumber)
 
-		getEthUsdPrice()
+		// get ETH price every 10 blocks or if the variable isn't set yet
+		if(ethPrice === -1 || blockNumber % 10 === 0) {
+			getEthUsdPrice()
+		}
 	});
 
 	provider.on(abv0EventFilter, async (log) => {
