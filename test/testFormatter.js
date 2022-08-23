@@ -1,4 +1,4 @@
-const { formatDiscordMessage, formatTwitterMessage } = require('../utils/format');
+const { formatDiscordMessage, formatTwitterMessage, getImageBuffer } = require('../utils/format');
 
 const mockTwitterClient = {
 	v1: {
@@ -183,4 +183,12 @@ describe("Formatter", function () {
 			assert.notEqual(mediaIds[0], "");
 		});
 	});
+
+	describe("handleNotFoundImage()", function () {
+		it("should have correct error handling when an image can't be found", async function () {
+			const imgBuffer = await getImageBuffer('https://media.artblocks.io/thumb/7046.png')
+
+			assert.equal(imgBuffer, null);
+		});
+	})
 });

@@ -16,17 +16,24 @@ const getURL = (platforms, contract, tokenIdLong, tokenId, collectionName) => {
 }
 const getMediaUrl = (tokenIdLong) => `https://media.artblocks.io/thumb/${tokenIdLong}.png`
 
-// TODO error handling
 const getImageBuffer = async (url) => {
-	const response = await axios.get(url, { responseType: 'arraybuffer' })
+	const response = await axios.get(url, { responseType: 'arraybuffer' }).catch(err => {
+		const json = err.toJSON()
+		console.log(`${json.config.url} resulted in error: ${json.message}`)
+	})
 
-	return Buffer.from(response.data, "utf-8")
+	return response ? Buffer.from(response.data, "utf-8") : null
 }
 
 async function uploadMedia(twitterClient, mediaUrl) {
-	let buffer = getImageBuffer(mediaUrl)
-	let mediaId = await twitterClient.v1.uploadMedia(buffer, { mimeType: 'image/png' });
-	return mediaId;
+	let buffer = await getImageBuffer(mediaUrl)
+
+	if(buffer) {
+		let mediaId = await twitterClient.v1.uploadMedia(buffer, { mimeType: 'image/png' });
+		return mediaId;
+	}
+
+	return null
 }
 // style = currency to include dollar sign
 const formatValue = (value, decimals = 2, style = 'decimal') =>
@@ -146,5 +153,6 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 module.exports = exports = {
 	formatDiscordMessage,
 	formatTwitterMessage,
-	formatValue
+	formatValue,
+	getImageBuffer
 }
