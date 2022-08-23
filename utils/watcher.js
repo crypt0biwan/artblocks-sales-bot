@@ -88,6 +88,11 @@ async function handleTransfer(tx) {
 	let platforms = []
 	let data = []
 
+	// extra check in case this function gets called directly
+	if(ethPrice === -1) {
+		getEthUsdPrice()
+	}
+
 	let isABv0 = !!txReceipt.logs.filter(x => {
 		return [AB_V0_CONTRACT].includes(x.address.toLowerCase())
 	}).length
