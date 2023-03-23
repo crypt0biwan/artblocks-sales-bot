@@ -101,6 +101,53 @@ const multiOpenseaSale = {
 	transactionHash: '0x7e9f8dbbf56b3105091d8f07d38b8e65a72964185ace25ecd3a76afa5685f585'
 }
 
+const multiDifferentSale = {
+	data: [
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '119000051',
+		tokenId: 51,
+		projectName: 'Ecumenopolis',
+		artist: 'Joshua Bagley'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '159000041',
+		tokenId: 41,
+		projectName: 'Fragments of an Infinite Field',
+		artist: 'Monica Rizzolli'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '77000169',
+		tokenId: 169,
+		projectName: 'Return',
+		artist: 'Aaron Penne'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '147000937',
+		tokenId: 937,
+		projectName: 'Trossets',
+		artist: 'Anna Carreras'
+	  },
+	  {
+		contract: '0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270',
+		tokenIdLong: '333000376',
+		tokenId: 376,
+		projectName: 'Alan Ki Aankhen',
+		artist: 'Fahad Karim'
+	  }
+	],
+	totalPrice: 11.430000000000003,
+	buyer: '0x4649941b72d28fc534cec775a6f35ea1fa4cdc63',
+	seller: 'Multiple',
+	ethPrice: 1565.5451974848488,
+	currency: 'ETH',
+	platforms: [ 'OpenSea' ],
+	transactionHash: '0x347ba87bd67aeaf0dbb8171fe53e7d1f17fc7f451e35f6bef79e83aa59708ff0'
+}
+
 const archipelagoSale = {
 	data: [
 	  {
@@ -139,6 +186,14 @@ describe("Formatter", function () {
 			const discordMsg = await formatDiscordMessage(multiSale);
 
 			assert.equal(discordMsg.embeds[0].title, 'Multiple "Geometry Runners by Rich Lord" items sold')
+		});
+
+		it("should format multiple sales of different projects correctly", async function () {
+			const discordMsg = await formatDiscordMessage(multiDifferentSale);
+
+			console.log(discordMsg)
+
+			// assert.equal(discordMsg.embeds[0].title, 'Multiple "Geometry Runners by Rich Lord" items sold')
 		});
 	});
 

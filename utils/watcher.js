@@ -24,9 +24,10 @@ const OLD_OPENSEA_CONTRACT = "0x7be8076f4ea4a4ad08075c2508e481d6c946d12b";
 const wyvernAbi = require("../abis/WyvernExchangeWithBulkCancellations.json");
 const wyvernContract = new Ethers.Contract(OPENSEA_CONTRACT, wyvernAbi, provider);
 
-const OPENSEA_SEAPORT_CONTRACT = "0x00000000006c3852cbef3e08e8df289169ede581"
+const OPENSEA_SEAPORT_CONTRACT_1_2 = "0x00000000006c3852cbef3e08e8df289169ede581"
+const OPENSEA_SEAPORT_CONTRACT_1_4 = "0x00000000000001ad428e4906ae43d8f9852d0dd6"
 const seaportAbi = require("../abis/SeaPort.json");
-const seaportContract = new Ethers.Contract(OPENSEA_SEAPORT_CONTRACT, seaportAbi, provider);
+const seaportContract = new Ethers.Contract(OPENSEA_SEAPORT_CONTRACT_1_4, seaportAbi, provider);
 
 const LOOKSRARE_CONTRACT = "0x59728544b08ab483533076417fbbb2fd0b17ce3a"
 const looksAbi = require("../abis/LooksRare.json");
@@ -104,7 +105,13 @@ async function handleTransfer(tx) {
 	});
 
 	let seaportLogRaw = txReceipt.logs.filter(x => {
-		return [OPENSEA_SEAPORT_CONTRACT].includes(x.address.toLowerCase())
+		return [
+			Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('OrderFulfilled(bytes32,address,address,address,(uint8,address,uint256,uint256)[],(uint8,address,uint256,uint256,address)[])')),
+			Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('fulfillAvailableOrders(((address,address,(uint8,address,uint256,uint256,uint256)[],(uint8,address,uint256,uint256,uint256,address)[],uint8,uint256,uint256,bytes32,uint256,bytes32,uint256),bytes)[],(uint256,uint256)[][],(uint256,uint256)[][],bytes32,uint256)'))
+		].includes(x.topics[0])
+
+		// 0x9d9af8e3: OrderFulfilled(bytes32,address,address,address,(uint8,address,uint256,uint256)[],(uint8,address,uint256,uint256,address)[])
+		// 0xed98a574: fulfillAvailableOrders(tuple[] orders,tuple[][] offerFulfillments,tuple[][] considerationFulfillments,bytes32 fulfillerConduitKey,uint256 maximumFulfilled)
 	});
 
 	let looksRareLogRaw = txReceipt.logs.filter(x => {
@@ -166,7 +173,12 @@ async function handleTransfer(tx) {
 		platforms.push("OpenSea")
 		// Check if related token transfers instead of a regular ETH buy
 		let tokenTransfers = txReceipt.logs.filter(x => {
-			return ![AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase()) && x.topics.includes(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')))
+			return ![AB_V0_CONTRACT, AB_V1_CONTRACT].includes(x.address.toLowerCase()) && 
+				x.topics.includes(
+					Ethers.utils.keccak256(
+						Ethers.utils.toUtf8Bytes('Transfer(address,address,uint256)')
+					)
+				)
 		});
 
 		// ERC20 token buy
@@ -190,7 +202,7 @@ async function handleTransfer(tx) {
 				// OrderFulfilled(bytes32 orderHash,address offerer,address zone,address recipient,(uint8 itemType,address token,uint256 identifier,uint256 amount)[],(uint8 itemType,address token,uint256 identifier,uint256 amount,address recipient)[])
 				// OrderFulfilled(bytes32,address,address,address,(uint8,address,uint256,uint256)[],(uint8,address,uint256,uint256,address)[])
 				// method 0x9d9af8e3
-				
+
 				try {
 					// get the transfers of the last argument of the OrderFulfilled method
 					for(let transfer of seaportLog.args[seaportLog.args.length-1]) {
