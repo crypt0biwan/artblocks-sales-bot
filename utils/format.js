@@ -63,7 +63,9 @@ const formatDiscordMessage = async ({ data, totalPrice, buyer, seller, ethPrice,
 	const url = getURL(platforms, contract, tokenIdLong, tokenId, projectName)
 	
 	if(data.length > 1) {
-		title = `Multiple "${projectName} by ${artist}" items sold`
+		title = `Multiple artworks sold`
+
+		description += '\n\n'
 
 		data.forEach(item => {
 			const { contract, tokenIdLong, tokenId, projectName, artist } = item
@@ -125,8 +127,10 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 
 
 	if(data.length > 1) {
-		title = `Multiple "${projectName} by ${artist}" items sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
+		title = `Multiple artworks sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
 		let mediaUrls = []
+
+		description += '\n'
 
 		data.forEach(item => {
 			const { contract, tokenIdLong, tokenId, projectName, artist } = item
@@ -137,11 +141,16 @@ const formatTwitterMessage = async (twitterClient, { data, totalPrice, buyer, se
 		// Tweet must not have more than 4 mediaIds. (Twitter code 324)
 		mediaUrls = mediaUrls.slice(0, 4)
 
-		mediaIds = await Promise.all(mediaUrls.map(url => uploadMedia(twitterClient, url)));
+		if(twitterClient) {
+			mediaIds = await Promise.all(mediaUrls.map(url => uploadMedia(twitterClient, url)));
+		}
 	} else {
 		title = `${projectName} #${tokenId} by ${artist} sold for ${totalPriceString} ${currency}${totalPriceUsdString}`
 		description += `${url}`
-		mediaIds = [await uploadMedia(twitterClient, getMediaUrl(tokenIdLong))];
+
+		if(twitterClient) {
+			mediaIds = [await uploadMedia(twitterClient, getMediaUrl(tokenIdLong))];
+		}
 	}
 
 	twitterMessage = `${title}\n`

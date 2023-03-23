@@ -18,6 +18,17 @@ describe("Watcher", function () {
 		});
 	});
 
+	describe("handleSeaport_1_4_Sales()", function() {
+		it("should return the correct numbers for a Seaport 1.4 ETH sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0xbe8b49ba2700254766bf2e79562a9d60b525ee86fdb70a40acb08e8125ce7c78'
+			})
+
+			assert.equal(details.currency, "ETH");
+			assert.equal(details.totalPrice, "85");
+		})
+	});
+
 	describe("handleSeaportSales()", function() {
 		it("should return the correct numbers for an ETH sale", async function () {
 			const details = await handleTransfer({
@@ -140,6 +151,14 @@ describe("Watcher", function () {
 			assert.equal(details.currency, "ETH");
 			assert.equal(details.totalPrice, "10.690000000000001");
 		})
+
+		it("should return the correct data for a Squiggle WETH sale", async function() {
+			const details = await handleTransfer({
+				transactionHash: '0xd4189d4b1c04851fb56afee6ffbef10e333c28d51a34fa6f6dfbbdec43ca76f4'
+			})
+
+			console.log(details)
+		})
 	})
 
 	describe("handleArchipelagoSales()", function() {
@@ -209,6 +228,23 @@ describe("Watcher", function () {
 			assert.equal(details.buyer, '0x1936ec5c03ef5448f3303aae23b4559863c639a7');
 			assert.equal(details.seller, 'Multiple');
 			assert.equal(details.totalPrice, '2.7');
+		})
+
+		it("should return the correct data for multiple different AB pieces in 1 sale", async function () {
+			const details = await handleTransfer({
+				transactionHash: '0x347ba87bd67aeaf0dbb8171fe53e7d1f17fc7f451e35f6bef79e83aa59708ff0'
+			})
+
+			console.log(details)
+		})
+
+		it("should do this too", async function() {
+			const details = await handleTransfer({
+				transactionHash: '0x68701bb3c1a1980f88d17ef7f0641607584bc7c9f70a4454ba47da4150bac9f4'
+			})
+
+			console.log(details)
+
 		})
 	})
 

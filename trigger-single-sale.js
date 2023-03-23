@@ -53,7 +53,9 @@ const transferHandler = async ({ data, totalPrice, buyer, seller, ethPrice, curr
 // const tx = '0x7e9f8dbbf56b3105091d8f07d38b8e65a72964185ace25ecd3a76afa5685f585'
 // const tx = '0xad32d6a2d834e5741f7d14337414b5619d8d1b9828537c64768ad709d2cd1558'
 // const tx = '0xfe52e31e245200bf8f776b62bcaa22f52682c1965307566de62369ccdf994817'
-const tx = '0xb64b09ddbddb48d5786ad5bc38a0193bde70ed4f8e8db2ea427d777892ed458e'
+// const tx = '0xb64b09ddbddb48d5786ad5bc38a0193bde70ed4f8e8db2ea427d777892ed458e'
+// const tx = '0xd4189d4b1c04851fb56afee6ffbef10e333c28d51a34fa6f6dfbbdec43ca76f4'
+const tx = '0x257b83ffb9e03f2a8c69e2ca1d02a506be54184c2184d6999b57b56fb563f3a1'
 
 const init = async () => {
     const details = await handleTransfer({
